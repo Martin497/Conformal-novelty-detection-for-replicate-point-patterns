@@ -3,7 +3,16 @@
 """
 Created on Fri Jan 24 07:22:36 2025
 
-@author: martin
+@author: Martin Voigt Vejling
+Emails: mvv@math.aau.dk
+        mvv@es.aau.dk
+        martin.vejling@gmail.com
+
+Script to import p-values, run a testing procedure, and plot the
+resulting empirical metrics (power and type I error probability),
+for the global hypothesis.
+
+Reproduces Figures 14 and 15.
 """
 
 import pandas as pd
@@ -16,6 +25,7 @@ import multiple_testing_module as mtm
 
 def Corrected_Fisher_combination(p_values, gamma):
     """
+    The corrected Fisher combination p-value of Bates (2023).
     """
     m = len(p_values)
     sum_ = np.sum(np.log(p_values))
@@ -24,6 +34,7 @@ def Corrected_Fisher_combination(p_values, gamma):
 
 def Fisher_combination(p_values):
     """
+    The Fisher combination p-value.
     """
     sum_ = np.sum(np.log(p_values))
     p = -2*sum_
@@ -31,16 +42,15 @@ def Fisher_combination(p_values):
 
 if __name__ == "__main__":
     plt.style.use("seaborn-v0_8-whitegrid")
-    alpha_arr = np.linspace(1e-03, 0.5, 100)
+    alpha_arr = np.linspace(1e-03, 0.5, 25)
     m = 10
     m0 = 5
     use_m0_est = True
     save_res = True
-    testing_procedure = "Fisher_combination"
 
-    method_list = ["MonteCarlo", "Proposed", "GET", "MonteCarlo", "Proposed"]
+    method_list = ["MMCTest", "CMMCTest", "GET", "MMCTest", "CMMCTest"]
     technique_list = ["Fisher", "Fisher", "th", "Hochberg", "Hochberg"]
-    folder_append = ["_03", "_03big", "_04", "_03", "_03big"]
+    folder_append = ["_01", "_01", "_01", "_01", "_01"]
 
     null_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP"]
     test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP"]
@@ -58,7 +68,7 @@ if __name__ == "__main__":
                 n = 2500
             gamma = m/n
 
-            folder = f"{method}{fapp}"
+            folder = f"p_values/{method}{fapp}"
             for idx1 in range(null_number_models):
                 for idx2 in range(number_models):
                     false_rejection_counter = 0
@@ -132,39 +142,10 @@ if __name__ == "__main__":
                 plt.xlabel("$\\alpha$")
                 plt.ylabel("TDR")
                 plt.legend()
-                # plt.xscale("log")
                 plt.title(f"{null_model_list[idx1]} vs {test_model_list[idx2]}")
                 if save_res is True:
-                    plt.savefig(f"global_plots/alpha_plot_TDR_{idx1}_{idx2}_{savename}.png", dpi=500, bbox_inches="tight")
+                    plt.savefig(f"p_values/global_plots/alpha_plot_TDR_{idx1}_{idx2}_{savename}.png", dpi=500, bbox_inches="tight")
                 plt.show()
-
-                if save_res is True:
-                    with open(f"global_plots/alpha_plot_TDR_{idx1}_{idx2}_{savename}.txt", "w") as file:
-                        file.write("\\addplot[semithick, mark=square, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, TDR_tot[:, 0, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:MMCTest_m05_globalFisher}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=square, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, TDR_tot[:, 1, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:CMMCTest_m05_globalFisher}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=diamond, color11, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, TDR_tot[:, 2, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:GET_m05_global}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=triangle, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, TDR_tot[:, 3, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:MMCTest_m05_globalHoch}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=triangle, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, TDR_tot[:, 4, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:CMMCTest_m05_globalHoch}\n")
-                        file.write("};\n")
 
             if null_model_list[idx1] == test_model_list[idx2]:
                 plt.figure(figsize=(6.4*1.5, 4.8*1.2))
@@ -180,37 +161,7 @@ if __name__ == "__main__":
                 # plt.xscale("log")
                 plt.title(f"{null_model_list[idx1]}")
                 if save_res is True:
-                    plt.savefig(f"global_plots/alpha_plot_FDR_{idx1}_{savename}.png", dpi=500, bbox_inches="tight")
+                    plt.savefig(f"p_values/global_plots/alpha_plot_FDR_{idx1}_{savename}.png", dpi=500, bbox_inches="tight")
                 plt.show()
-
-                if save_res is True:
-                    with open(f"global_plots/alpha_plot_FWER_{idx1}_{savename}.txt", "w") as file:
-                        file.write("\\addplot[semithick, mark=square, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, FWER_tot[:, 0, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:MMCTest_m05_globalFisher}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=square, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, FWER_tot[:, 1, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:CMMCTest_m05_globalFisher}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=diamond, color11, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, FWER_tot[:, 2, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:GET_m05_global}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=triangle, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, FWER_tot[:, 3, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:MMCTest_m05_globalHoch}\n")
-                        file.write("};\n")
-                        file.write("\\addplot[semithick, mark=triangle, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                        for x, y in zip(alpha_arr, FWER_tot[:, 4, idx1, idx2]):
-                            file.write(f"{x} {y}\n")
-                        # file.write("};\n\\label{plot:CMMCTest_m05_globalHoch}\n")
-                        file.write("};\n")
-
-
 
 
