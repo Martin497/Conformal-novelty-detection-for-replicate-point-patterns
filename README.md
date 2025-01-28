@@ -23,10 +23,15 @@ Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
 - simulation_study/multipleGET.R `Run a simulation study using the multiple global envelope test by concatenating the functional summary statistics.`
 
 ### Sweat gland data
-- MMCTest_sweat_gland.R `Implementation of the naïve MMCTest procedure on the sweat gland data in which independent p-values are computed and saved.`
+- sweat_gland/MMCTest_sweat_gland.R `Implementation of the naïve MMCTest procedure on the sweat gland data in which independent p-values are computed and saved.`
+- sweat_gland/CMMCTest_sweat_gland.R `Implementation of the proposed CMMCTest procedure on the sweat gland data in which conformal p-values are computed and saved.`
+- sweat_gland/graphical_interpretation_sweat_gland.R `Computing data needed for the graphical interpretation.`
 
 #### From https://github.com/mikkoku/SweatPaper
-- abc_mcmc_sampler.jl `Implementation of the ABC-MCMC sampler for the generative model.`
+- sweat_gland/abc_mcmc_sampler.jl `Implementation of the ABC-MCMC sampler for the generative model.`
+- sweat_gland/generative_model.jl `Implementation of the generative model.`
+- sweat_gland/sequential_model_with_noise.jl `Implementation of the sequential model with noise.`
+- sweat_gland/readpattern.jl `Loading the data file.`
 
 ### Recreating figures
 - Figure 1: numerical_FWER/polyFWER.py
@@ -35,6 +40,8 @@ Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
 - Figures 6 and 7: simulation_study/test_statistic_alpha.py
 - Figures 14 and 15: simulation_study/global_test_across_alpha.py
 - Figure 8: simulation_study/power_across_alphanm.py
+- Figure 12: sweat_gland/open_pvalues.py
+- Figure 13: sweat_gland/graphical_interpretation_sweat_gland.py
 
 ## Software Setup
 
