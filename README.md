@@ -3,8 +3,8 @@ This GitHub repository contains the code library used to create the results of t
 
 Author: Martin Voigt Vejling
 
-E-Mails: mvv@math.aau.dk
-         mvv@es.aau.dk
+E-Mails: mvv@math.aau.dk;
+         mvv@es.aau.dk;
          martin.vejling@gmail.com
 
 ## Contents
