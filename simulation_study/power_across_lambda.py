@@ -3,7 +3,16 @@
 """
 Created on Fri Nov  1 11:04:23 2024
 
-@author: martin
+@author: Martin Voigt Vejling
+Emails: mvv@math.aau.dk
+        mvv@es.aau.dk
+        martin.vejling@gmail.com
+
+Script to import p-values, run a multiple testing procedure, and plot the
+resulting empirical metrics (FDR, FWER, TDR, etc...),
+for varying values of Storey's hyperparameter, lambda.
+
+Reproduces Figure 5.
 """
 
 import pandas as pd
@@ -12,7 +21,6 @@ import matplotlib.pyplot as plt
 from rds2py import read_rds
 
 import multiple_testing_module as mtm
-from MC_CP_comparison import testing_wrapper
 
 
 if __name__ == "__main__":
@@ -24,13 +32,11 @@ if __name__ == "__main__":
     use_m0_est = True
     save_res = False
 
-    method_list = ["MonteCarlo", "Proposed"]
-    folder_append = ["_03", "_03big"]
+    method_list = ["MMCTest", "CMMCTest"]
+    folder_append = ["_01", "_01"]
 
     null_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP"]
     test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP"]
-    # null_model_list = ["Poisson_Mrkvicka"]
-    # test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka"]
     null_number_models = len(null_model_list)
     number_models = len(test_model_list)
 
@@ -38,7 +44,7 @@ if __name__ == "__main__":
     FDR_tot = np.zeros((len(lambda_arr), 2, null_number_models, number_models), dtype=np.float64)
     for lambda_idx, lambda_ in enumerate(lambda_arr):
         for method_idx, (method, fapp) in enumerate(zip(method_list, folder_append)):
-            folder = f"{method}{fapp}"
+            folder = f"p_values/{method}{fapp}"
             for idx1 in range(null_number_models):
                 for idx2 in range(number_models):
                     name = f"{null_model_list[idx1]}_{test_model_list[idx2]}"
@@ -54,9 +60,9 @@ if __name__ == "__main__":
                     data_sims = u_marg.shape[0]
                     assert m == u_marg.shape[1], "The number of test points, m, is mis-specified."
 
-                    rejectBool = testing_wrapper(u_marg, alpha, m0, m, data_sims,
-                                                 "BH", null_model_list[idx1], test_model_list[idx2],
-                                                 lambda_, use_m0_est)
+                    rejectBool = mtm.testing_wrapper(u_marg, alpha, m0, m, data_sims,
+                                                     "BH", null_model_list[idx1], test_model_list[idx2],
+                                                     lambda_, use_m0_est)
 
                     TDR, TDP = mtm.compute_TDR(rejectBool, null_model_list[idx1], test_model_list[idx2], m0, m, data_sims)
                     TDR_tot[lambda_idx, method_idx, idx1, idx2] = TDR
@@ -77,36 +83,19 @@ if __name__ == "__main__":
                 plt.legend()
                 plt.title(f"{null_idx}_{alt_idx}")
                 if save_res is True:
-                    plt.savefig(f"lambda_plots/lambda_plot_TDR_{null_idx}_{alt_idx}_m09.png", dpi=500, bbox_inches="tight")
+                    plt.savefig(f"p_values/lambda_plots/lambda_plot_TDR_{null_idx}_{alt_idx}_m09.png", dpi=500, bbox_inches="tight")
                 plt.show()
 
                 if save_res is True:
-                    with open(f"lambda_plots/lambda_plot_TDR_{null_idx}_{alt_idx}_m09.txt", "w") as file:
+                    with open(f"p_values/lambda_plots/lambda_plot_TDR_{null_idx}_{alt_idx}_m09.txt", "w") as file:
                         file.write("\\addplot[semithick, mark=diamond, color1]\ntable{%\n")
                         for x, y in zip(lambda_arr, TDR_tot[:, 0, null_idx, alt_idx]):
                             file.write(f"{x} {y}\n")
                         file.write("};\n")
-                        # file.write("};\n\\label{plot:MMCTest_m09}\n")
                         file.write("\\addplot[semithick, mark=diamond, color2]\ntable{%\n")
                         for x, y in zip(lambda_arr, TDR_tot[:, 1, null_idx, alt_idx]):
                             file.write(f"{x} {y}\n")
                         file.write("};\n")
-                        # file.write("};\n\\label{plot:CMMCTest_m09}\n")
-
-                # argsort0 = np.argsort(FDR_tot[:, 0, null_idx, alt_idx])
-                # FDRsorted0 = (FDR_tot[:, 0, null_idx, alt_idx])[argsort0]       
-                # TDRsorted0 = (TDR_tot[:, 0, null_idx, alt_idx])[argsort0]
-                # argsort1 = np.argsort(FDR_tot[:, 1, null_idx, alt_idx])
-                # FDRsorted1 = (FDR_tot[:, 1, null_idx, alt_idx])[argsort1]       
-                # TDRsorted1 = (TDR_tot[:, 1, null_idx, alt_idx])[argsort1]
-                # plt.figure(figsize=(6.4*1.5, 4.8*1.2))
-                # plt.plot(FDRsorted0, TDRsorted0, color="tab:purple", label="MMCTest")
-                # plt.plot(FDRsorted1, TDRsorted1, color="tab:orange", label="CMMCTest")
-                # plt.xlabel("FDR")
-                # plt.ylabel("TDR")
-                # plt.legend()
-                # plt.title(f"{null_idx}_{alt_idx}")
-                # plt.show()
 
         plt.figure(figsize=(6.4*1.5, 4.8*1.2))
         plt.axhline(alpha, color="black")
@@ -117,21 +106,19 @@ if __name__ == "__main__":
         plt.legend()
         plt.title(f"{null_idx}")
         if save_res is True:
-            plt.savefig(f"lambda_plots/lambda_plot_FDR_{null_idx}_m09.png", dpi=500, bbox_inches="tight")
+            plt.savefig(f"p_values/lambda_plots/lambda_plot_FDR_{null_idx}_m09.png", dpi=500, bbox_inches="tight")
         plt.show()
 
         if save_res is True:
-            with open(f"lambda_plots/lambda_plot_FDR_{null_idx}_m09.txt", "w") as file:
+            with open(f"p_values/lambda_plots/lambda_plot_FDR_{null_idx}_m09.txt", "w") as file:
                 file.write("\\addplot[semithick, mark=diamond, color1]\ntable{%\n")
                 for x, y in zip(lambda_arr, FDR_tot_mean[:, 0, null_idx]):
                     file.write(f"{x} {y}\n")
                 file.write("};\n")
-                # file.write("};\n\\label{plot:MMCTest_m09}\n")
                 file.write("\\addplot[semithick, mark=diamond, color2]\ntable{%\n")
                 for x, y in zip(lambda_arr, FDR_tot_mean[:, 1, null_idx]):
                     file.write(f"{x} {y}\n")
                 file.write("};\n")
-                # file.write("};\n\\label{plot:CMMCTest_m09}\n")
 
 
 
