@@ -7,6 +7,8 @@ E-Mails: mvv@math.aau.dk;
          mvv@es.aau.dk;
          martin.vejling@gmail.com
 
+Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
+
 ## Contents
 ### Modules
 - simulation_study/MySimulate.R `Base functionality to simulate the considered point processes.`
