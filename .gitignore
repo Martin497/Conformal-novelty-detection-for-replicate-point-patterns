@@ -7,13 +7,6 @@ __pycache__/
 *.so
 
 # Repository specifics
-data_simulations/
-p_values/
-graphical_interpretation/
-sweat_gland/p_values
-sweat_gland/estimates
-sweat_gland/data
-sweat_gland/simulations
 
 *.npy
 *.Rproj.user
@@ -26,8 +19,6 @@ sweat_gland/simulations
 *.osm
 *.npz
 *.json
-*.csv
-*.rds
 *.Rproj
 
 
