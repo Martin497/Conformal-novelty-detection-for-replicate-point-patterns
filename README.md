@@ -21,10 +21,11 @@ Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
 
 ## Software Setup
 
-### Dependencies
+### Python dependencies
 ```
 python 3
 numpy
-scipy
 matplotlib
+rds2py
+pandas
 ```
