@@ -22,6 +22,12 @@ Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
 - simulation_study/MMCTest_estimate.R `Run a simulation study for the naïve MMCTest procedure using parametric data augmentation in which independent p-values are computed and saved.`
 - simulation_study/multipleGET.R `Run a simulation study using the multiple global envelope test by concatenating the functional summary statistics.`
 
+### Sweat gland data
+- MMCTest_sweat_gland.R `Implementation of the naïve MMCTest procedure on the sweat gland data in which independent p-values are computed and saved.`
+
+## From https://github.com/mikkoku/SweatPaper
+- abc_mcmc_sampler.jl `Implementation of the ABC-MCMC sampler for the generative model.`
+
 ### Recreating figures
 - Figure 1: numerical_FWER/polyFWER.py
 - Figures 3, 4, 9, and 10: simulation_study/power_across_alpha.py
