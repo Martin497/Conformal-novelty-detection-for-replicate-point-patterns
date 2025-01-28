@@ -1,0 +1,96 @@
+library("GET")
+library("spatstat")
+library("glue")
+library("hash")
+library("lhs")
+
+ImportSimulation <- function(subject_id, sim, window){
+  data <- read.delim(glue("simulations/subject_{subject_id}/smwn_subject_{subject_id}_sim_{sim}_pythonized.txt"))[[1]]
+  pp <- array(0, dim=c(length(data), 2))
+  for (i in 1:length(data)) {
+    line <- data[i]
+    x <- as.double(strsplit(line, ",")[[1]][1])
+    y <- as.double(strsplit(line, ",")[[1]][2])
+    point <- c(x, y)
+    pp[i,] <- point
+  }
+  X <- as.ppp(pp, W=owin(c(window$x0, window$x1), c(window$y0, window$y1)))
+  return(X)
+}
+
+setwd("/home/martin/Documents/GitHub/ConformalTesting/sweat_gland")
+set.seed(13)
+
+control_ids <- c(96, 149, 203, 205)
+MNA_diagnosed_ids <- c(23, 36, 42, 50, 73)
+MNA_suspected_ids <- c(10, 20, 40, 61, 71)
+
+train_ids <- MNA_diagnosed_ids
+test_ids <- c(MNA_suspected_ids, control_ids)
+#train_ids <- control_ids
+#test_ids <- c(MNA_suspected_ids, MNA_diagnosed_ids)
+g <- length(train_ids)
+m <- length(test_ids)
+
+GET_sims <- 5000
+GET_type <- "erl"
+folder <- "p_values"
+name <- "smwn_diagnosed_n5000"
+
+meta <- read.csv("data/meta.csv")
+data <- read.csv("data/glands.csv")
+window <- subset(meta, subjectid==20)
+r <- Lest(rpoispp(4e-05, win=owin(c(window$x0, window$x1), c(window$y0, window$y1))), correction = "translate")[['r']]
+
+
+### Import/simulate calibration data
+simCali <- matrix(nrow = length(r), ncol = GET_sims)
+sim_counter <- array(1, dim=(g))
+for(i in 1:GET_sims) {
+  ug <- runifint(1, 1, g)
+  Xcali <- ImportSimulation(train_ids[ug], sim_counter[ug], window)
+  simCali[, i] <- Lest(Xcali, correction = "translate", r = r)[['trans']] - r
+  sim_counter[ug] = sim_counter[ug] + 1
+}
+
+
+### Import test data
+simTest <- matrix(nrow = length(r), ncol = m)
+for (k in 1:m) {
+  xy <- subset(data, subjectid==test_ids[k])
+  Xtest <- ppp(xy$x, xy$y, window=owin(c(window$x0, window$x1), c(window$y0, window$y1)))
+  simTest[, k] <- Lest(Xtest, correction = "translate")[['trans']] - r
+}
+
+
+Measure <- matrix(nrow=m)
+cset_dict <- hash()
+for (k in 1:m) {
+  cset_dict[[glue("{k}")]] <- curve_set(r = r, obs = simTest[, k], sim = simCali)
+  GET_res <- global_envelope_test(cset_dict[[glue("{k}")]], type = GET_type)
+  Measure[k] <- attr(GET_res, "M")[1]
+}
+
+# Benjamini-Hochberg procedure
+alpha <- 0.05
+lambda <- 0.25
+pi0_hat <- min(1, (1 + sum(ifelse(Measure > lambda, 1, 0))) / (m * (1 - lambda))) # Storey's correction
+m0_hat <- ceiling(pi0_hat * m)
+test_sequence <- seq(1, 10) / m0_hat * alpha
+sorting_order <- order(Measure)
+
+cr <- hash()
+cr_data <- array(0, dim=c(m, length(r), 5))
+for (k in 1:m) {
+  cr[[glue("{k}")]] <- central_region(cset_dict[[glue("{sorting_order[k]}")]], coverage=1-test_sequence[k])
+  cr_data[k,,1] <- cr[[glue("{k}")]]$r
+  cr_data[k,,2] <- cr[[glue("{k}")]]$central
+  cr_data[k,,3] <- cr[[glue("{k}")]]$lo
+  cr_data[k,,4] <- cr[[glue("{k}")]]$hi
+  cr_data[k,,5] <- cr[[glue("{k}")]]$obs
+}
+
+saveRDS(cr_data, glue("{folder}/{name}_data.rds"))
+saveRDS(test_sequence, glue("{folder}/{name}_test_sequence.rds"))
+saveRDS(sorting_order, glue("{folder}/{name}_sorting_order.rds"))
+
