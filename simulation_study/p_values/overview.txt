@@ -1,6 +1,9 @@
+## Basic numerical experiments:
 [par-L-erl]    Scenario (S1) in CMMCTest_01 and MMCTest_01
-[par-L-erl]    Scenario (S2) in CMMCTest_02 and MMCTest_01
+[par-L-erl]    Scenario (S2) in CMMCTest_02 and MMCTest_02
 [par-L-erl]    Scenario (S3) in CMMCTest_estimate_01 and MMCTest_estimate_01
+
+## Varying test statistics:
 [joi-L-erl]    Scenario (S1) in CMMCTest_03
 [par-J-erl]    Scenario (S1) in CMMCTest_04
 [par-L-cont]   Scenario (S1) in CMMCTest_05
@@ -13,3 +16,11 @@
 [joi-J-cont]   Scenario (S1) in CMMCTest_12
 [joi-J-area]   Scenario (S1) in CMMCTest_13
 [multiple-GET] Scenario (S1) in multipleGET_01
+
+## Varying triplets (alpha, n, m):
+[par-L-erl]    With n\in\{250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500\}, m=100, m0=50, data_sims=2000 in CMMCTest_14
+[par-L-erl]    With n\in\{250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500\}, m=10, m0=5, data_sims=2000 in MMCTest_03
+[par-L-erl]    With n\in\{300, 400, 700, 1000, 1500, 2000, 2500\}, m=20, m0=10, data_sims=2000 in MMCTest_04
+[par-L-erl]    With n\in\{300, 450, 600, 750, 900, 1050, 1200, 1350, 1500, 1800, 2100, 2250, 2520\}, m=30, m0=15, data_sims=2000 in MMCTest_05
+[par-L-erl]    With n\in\{240, 540, 780, 1020, 1380, 1800, 2220, 2520\}, m=6, m0=3, data_sims=2000 in MMCTest_06
+
