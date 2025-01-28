@@ -48,7 +48,7 @@ if __name__ == "__main__":
     use_m0_est = True
     save_res = True
 
-    method_list = ["MMCTest", "CMMCTest", "GET", "MMCTest", "CMMCTest"]
+    method_list = ["MMCTest", "CMMCTest", "multipleGET", "MMCTest", "CMMCTest"]
     technique_list = ["Fisher", "Fisher", "th", "Hochberg", "Hochberg"]
     folder_append = ["_01", "_01", "_01", "_01", "_01"]
 
