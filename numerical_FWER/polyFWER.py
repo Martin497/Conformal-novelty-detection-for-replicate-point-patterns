@@ -6,7 +6,7 @@ Created on Tue Dec 10 10:12:58 2024
 @author: Martin Voigt Vejling
 Emails: mvv@math.aau.dk
         mvv@es.aau.dk
-        martin.vejlig@gmail.com
+        martin.vejling@gmail.com
 
 Script to numerically evaluate the family-wise error rate for a given sequence
 of thresholds. The implementation is based on Lemma 3 in the supplementary material.
