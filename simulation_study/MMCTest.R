@@ -1,67 +1,36 @@
+#' @author: Martin Voigt Vejling
+#' Emails: mvv@math.aau.dk
+#'         mvv@es.aau.dk
+#'         martin.vejling@gmail.com
+#' 
+#' Main script for the naïve multiple Monte Carlo test (CMMCTest).
+#' In this script, independent p-values are computed for the multiple
+#' Monte Carlo testing setup.
+#' 
 library("GET")
 library("spatstat")
 library("glue")
 library("hash")
+source("MySimulate.R")
 
-MySimulate <- function(model, params, window){
-  if (model == "Hardcore") {
-    X <- rHardcore(params[[1]][1], R=params[[1]][2], W=window)
-  } else if (model == "Strauss2" | model == "Strauss1" | model == "Strauss_Mrkvicka") {
-    X <- rStrauss(params[[1]][1], params[[1]][2], R=params[[1]][3], W=window)
-  } else if (model == "Poisson" | model == "Poisson_Mrkvicka") {
-    X <- rpoispp(params[[1]], win=window)
-  } else if (model == "MatClust1" | model == "MatClust2" | model == "MatClust3" | model == "MatClust_Mrkvicka") {
-    X <- rMatClust(params[[1]][1], params[[1]][2], params[[1]][3], win=window)
-  } else if (model == "LGCP") {
-    X <- rLGCP(model="exponential", mu=params[[1]][1], var=params[[1]][2], scale=params[[1]][3], win=window)
-  } else {
-    stop("No fitting null model.")
-  }
-  return(X)
-}
-
-set.seed(33)
+set.seed(35)
 
 test_function <- "L" # Options: L, J
 
-m <- 30
-m0 <- 15
+m <- 10
+m0 <- 5
 
-GET_sims <- 84
-#n_list <- c(25, 50, 75, 100, 125, 150, 175, 200, 225, 250)
-#n_list <- c(15, 25, 35, 50, 75, 100, 125)
-n_list <- c(10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 75, 84)
-#n_list <- c(40, 90, 130, 170, 230, 300, 370, 420)
-#n_list <- c(GET_sims)
+GET_sims <- 250
+n_list <- c(GET_sims)
 GET_type <- "erl"
-folder <- "MonteCarlo_25"
+folder <- "MMCTest_01"
 
 data_sims <- 2000
 
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#model_list <- list("LGCP")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-#param_list <- list(c(5, 0.6, 0.05))
-
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-
-null_model_list <- list("Poisson_Mrkvicka")
-model_list <- list("Strauss_Mrkvicka", "MatClust_Mrkvicka")
-null_param_list <- list(c(200))
-param_list <- list(c(250, 0.6, 0.03), c(200, 0.06, 1))
-
-#null_model_list <- list("LGCP")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#null_param_list <- list(c(5, 0.6, 0.05))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
+null_model_list <- list("Strauss", "Poisson", "LGCP")
+model_list <- list("Strauss", "Poisson", "LGCP")
+null_param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
+param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
 
 window <- owin(c(0, 1), c(0, 1))
 number_null_models = length(null_model_list)
@@ -129,9 +98,6 @@ for (idx1 in 1:number_null_models) {
         for (nuse in n_list) {
           cset <- curve_set(r = r, obs = simTest_dict[[glue("{j}_{k}")]], sim = simCali_dict[[glue("{j},{k}")]][,1:nuse])
           res_true_null <- forder(cset, measure = GET_type)
-          #res_true_null <- global_envelope_test(cset, type = GET_type)
-          #MeasureTotal[j,nidx,k] <- attr(res_true_null, "M")[1]
-          #MeasureTotal[j,nidx,k] <- res_true_null[1]
           MeasureTotal[j,nidx,k] <- (1 + sum(res_true_null[2:(nuse+1)] <= res_true_null[1], na.rm=TRUE))/(nuse + 1)
           nidx <- nidx + 1
         }

@@ -1,24 +1,17 @@
+#' @author: Martin Voigt Vejling
+#' Emails: mvv@math.aau.dk
+#'         mvv@es.aau.dk
+#'         martin.vejling@gmail.com
+#' 
+#' Main script for the proposed conformal multiple Monte Carlo test (CMMCTest).
+#' In this script, the multiple global envelope test p-value for a global null
+#' hypothesis is computed.
+#' 
 library("GET")
 library("spatstat")
 library("glue")
 library("hash")
-
-MySimulate <- function(model, params, window){
-  if (model == "Hardcore") {
-    X <- rHardcore(params[[1]][1], R=params[[1]][2], W=window)
-  } else if (model == "Strauss2" | model == "Strauss1" | model == "Strauss_Mrkvicka") {
-    X <- rStrauss(params[[1]][1], params[[1]][2], R=params[[1]][3], W=window)
-  } else if (model == "Poisson" | model == "Poisson_Mrkvicka") {
-    X <- rpoispp(params[[1]], win=window)
-  } else if (model == "MatClust1" | model == "MatClust2" | model == "MatClust3" | model == "MatClust_Mrkvicka") {
-    X <- rMatClust(params[[1]][1], params[[1]][2], params[[1]][3], win=window)
-  } else if (model == "LGCP") {
-    X <- rLGCP(model="exponential", mu=params[[1]][1], var=params[[1]][2], scale=params[[1]][3], win=window)
-  } else {
-    stop("No fitting null model.")
-  }
-  return(X)
-}
+source("MySimulate.R")
 
 set.seed(35)
 
@@ -34,13 +27,8 @@ data_sims <- 2000
 m <- 10
 m0 <- 5
 
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-
-null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP")
-model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP")
+null_model_list <- list("Strauss", "Poisson", "LGCP")
+model_list <- list("Strauss", "Poisson", "LGCP")
 null_param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
 param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
 

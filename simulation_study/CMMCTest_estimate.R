@@ -1,54 +1,26 @@
+#' @author: Martin Voigt Vejling
+#' Emails: mvv@math.aau.dk
+#'         mvv@es.aau.dk
+#'         martin.vejling@gmail.com
+#' 
+#' Main script for the proposed conformal multiple Monte Carlo test (CMMCTest).
+#' In this script, the conformal p-values are computed for the multiple
+#' Monte Carlo testing setup where the null sample is augmented
+#' by a parametric method.
+#' 
 library("GET")
 library("spatstat")
 library("glue")
 library("hash")
 library("lhs")
+source("MySimulate.R")
+source("MyFit.R")
 
-MySimulate <- function(model, params, window){
-  if (model == "Hardcore") {
-    X <- rHardcore(params[[1]][1], R=params[[1]][2], W=window)
-  } else if (model == "Strauss2" | model == "Strauss1" | model == "Strauss_Mrkvicka") {
-    X <- rStrauss(params[[1]][1], params[[1]][2], R=params[[1]][3], W=window)
-  } else if (model == "Poisson" | model == "Poisson_Mrkvicka") {
-    X <- rpoispp(params[[1]], win=window)
-  } else if (model == "MatClust1" | model == "MatClust2" | model == "MatClust3" | model == "MatClust_Mrkvicka") {
-    X <- rMatClust(params[[1]][1], params[[1]][2], params[[1]][3], win=window)
-  } else if (model == "LGCP") {
-    X <- rLGCP(model="exponential", mu=params[[1]][1], var=params[[1]][2], scale=params[[1]][3], win=window)
-  } else {
-    stop("No fitting null model.")
-  }
-  return(X)
-}
-
-MyFit <- function(model, data) {
-  if (model == "Hardcore") {
-    stop("Estimating Hardcore model not implemented.")
-  } else if (model == "Strauss2" | model == "Strauss1" | model == "Strauss_Mrkvicka") {
-    rr <- data.frame(r=seq(0.02, 0.04, by=0.005))
-    p <- profilepl(rr, Strauss, data ~ 1, aic=TRUE)
-    model_fit <- as.ppm(p)
-    model_params <- c(exp(model_fit$coef[[1]]), min(exp(model_fit$coef[[2]]), 1), p$param[p$iopt,])
-  } else if (model == "Poisson" | model == "Poisson_Mrkvicka") {
-    model_params <- c(data$n/area(data$window))
-  } else if (model == "MatClust1" | model == "MatClust2" | model == "MatClust3" | model == "MatClust_Mrkvicka") {
-    model_fit <- kppm(data, clusters="MatClust")
-    model_params <- c(model_fit$par[[1]], model_fit$par[[2]], model_fit$mu)
-  } else if (model == "LGCP") {
-    model_fit <- kppm(data, clusters="LGCP", covmodel=list(model="exponential"))
-    print(model_fit)
-    model_params <- c(model_fit$mu, model_fit$par[[1]], model_fit$par[[2]])
-  } else {
-    stop("No fitting null model.")
-  }
-  return(model_params)
-}
-
-set.seed(14)
+set.seed(35)
 
 GET_sims <- 2500
 GET_type <- "erl"
-folder <- "ProposedEstimate_02"
+folder <- "CMMCTest_Estimate_01"
 
 null_data_sims <- 1
 null_data_samples <- 10
@@ -57,25 +29,10 @@ data_sims <- 2000
 m <- 10
 m0 <- 5
 
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#model_list <- list("LGCP")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-#param_list <- list(c(5, 0.6, 0.05))
-
-#null_model_list <- list("LGCP")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#null_param_list <- list(c(5, 0.6, 0.05))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-
-null_model_list <- list("LGCP")
-model_list <- list("Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-null_param_list <- list(c(5, 0.6, 0.05))
-param_list <- list(c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
+null_model_list <- list("Strauss", "Poisson", "LGCP")
+model_list <- list("Strauss", "Poisson", "LGCP")
+null_param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
+param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
 
 window <- owin(c(0, 1), c(0, 1))
 number_null_models = length(null_model_list)
@@ -165,19 +122,6 @@ for (idx1 in 1:number_null_models) {
 
     filename_rds <- glue("p_values/{folder}/{name}.rds")
     saveRDS(MeasureTotal, filename_rds)
-
-    filename_txt <- glue("p_values/{folder}/{name}.txt")
-    fileConn<-file(filename_txt, open="wt")
-    writeLines(c(glue("Null hypothesis: {null_model}"),
-                 glue("Alternative: {alternative_model}"),
-                 glue("number_test_points (m): {m}"),
-                 glue("number_true_nulls (m0): {m0}"),
-                 glue("number_calibration_points (n): {GET_sims}"),
-                 glue("GET_type: {GET_type}"),
-                 glue("data_sims: {data_sims}"),
-                 glue("null_data_sims: {null_data_sims}"),
-                 glue("null_data_samples: {null_data_samples}")), fileConn)
-    close(fileConn)
   }
 }
 

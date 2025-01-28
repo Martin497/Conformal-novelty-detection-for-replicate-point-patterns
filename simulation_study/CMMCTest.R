@@ -1,35 +1,26 @@
+#' @author: Martin Voigt Vejling
+#' Emails: mvv@math.aau.dk
+#'         mvv@es.aau.dk
+#'         martin.vejling@gmail.com
+#' 
+#' Main script for the proposed conformal multiple Monte Carlo test (CMMCTest).
+#' In this script, the conformal p-values are computed for the multiple
+#' Monte Carlo testing setup.
+#' 
 library("GET")
 library("spatstat")
 library("glue")
 library("hash")
-
-MySimulate <- function(model, params, window){
-  if (model == "Hardcore") {
-    X <- rHardcore(params[[1]][1], R=params[[1]][2], W=window)
-  } else if (model == "Strauss2" | model == "Strauss1" | model == "Strauss_Mrkvicka") {
-    X <- rStrauss(params[[1]][1], params[[1]][2], R=params[[1]][3], W=window)
-  } else if (model == "Poisson" | model == "Poisson_Mrkvicka") {
-    X <- rpoispp(params[[1]], win=window)
-  } else if (model == "MatClust1" | model == "MatClust2" | model == "MatClust3" | model == "MatClust_Mrkvicka") {
-    X <- rMatClust(params[[1]][1], params[[1]][2], params[[1]][3], win=window)
-  } else if (model == "LGCP") {
-    X <- rLGCP(model="exponential", mu=params[[1]][1], var=params[[1]][2], scale=params[[1]][3], win=window)
-  } else {
-    stop("No fitting null model.")
-  }
-  return(X)
-}
+source("MySimulate.R")
 
 set.seed(35)
 
 test_function <- "J" # Options: L, J
 
 GET_sims <- 2500
-#n_list <- c(250, 750, 1250, 1750, GET_sims)
-#n_list <- c(500, 1000, 1500, 2000)
 n_list <- c(GET_sims)
 GET_type <- "erl"
-folder <- "Proposed_19"
+folder <- "CMMCTest_01"
 tie_breaking_method <- "joint" # Options: parallel, joint
 
 data_sims <- 2000
@@ -37,40 +28,10 @@ data_sims <- 2000
 m <- 10
 m0 <- 5
 
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-
-#null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#model_list <- list("LGCP")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-#param_list <- list(c(5, 0.6, 0.05))
-
-#null_model_list <- list("LGCP")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#null_param_list <- list(c(5, 0.6, 0.05))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-
-null_model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-null_param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
-
-#null_model_list <- list("Poisson_Mrkvicka")
-#model_list <- list("LGCP")
-#null_param_list <- list(c(200))
-#param_list <- list(c(5, 0.6, 0.05))
-
-#null_model_list <- list("Poisson_Mrkvicka")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka")
-#null_param_list <- list(c(200))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1))
-
-#null_model_list <- list("Strauss_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#model_list <- list("Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP")
-#null_param_list <- list(c(250, 0.6, 0.03), c(200, 0.06, 1), c(5, 0.6, 0.05))
-#param_list <- list(c(250, 0.6, 0.03), c(200), c(200, 0.06, 1), c(5, 0.6, 0.05))
+null_model_list <- list("Strauss", "Poisson", "LGCP")
+model_list <- list("Strauss", "Poisson", "LGCP")
+null_param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
+param_list <- list(c(250, 0.6, 0.03), c(200), c(5, 0.6, 0.05))
 
 window <- owin(c(0, 1), c(0, 1))
 number_null_models = length(null_model_list)
@@ -138,9 +99,6 @@ for (idx1 in 1:number_null_models) {
           for (nuse in n_list) {
             cset <- curve_set(r = r, obs = simTest_dict[[glue("{j}_{k}")]], sim = simCali_dict[[glue("{j}")]][,1:nuse])
             res_true_null <- forder(cset, measure = GET_type)
-            #res_true_null <- global_envelope_test(cset, type = GET_type)
-            #MeasureTotal[j,nidx,k] <- attr(res_true_null, "M")[1]
-            #MeasureTotal[j,nidx,k] <- res_true_null[1]
             MeasureTotal[j,nidx,k] <- (1 + sum(res_true_null[2:(nuse+1)] <= res_true_null[1], na.rm=TRUE))/(nuse + 1)
             nidx <- nidx + 1
           }
@@ -165,19 +123,6 @@ for (idx1 in 1:number_null_models) {
 
     filename_rds <- glue("p_values/{folder}/{name}.rds")
     saveRDS(MeasureTotal, filename_rds)
-    
-    #filename_csv <- glue("p_values/{folder}/{name}.csv")
-    #write.csv(MeasureTotal, filename_csv)
-
-    #filename_txt <- glue("p_values/{folder}/{name}.txt")
-    #fileConn<-file(filename_txt, open="wt")
-    #writeLines(c(glue("Null hypothesis: {null_model}"),
-    #             glue("Alternative: {alternative_model}"),
-    #             glue("number_test_points (m): {m}"),
-    #             glue("number_true_nulls (m0): {m0}"),
-    #             glue("number_calibration_points (n): {GET_sims}"),
-    #             glue("GET_type: {GET_type}")), fileConn)
-    #close(fileConn)
   }
 }
 
