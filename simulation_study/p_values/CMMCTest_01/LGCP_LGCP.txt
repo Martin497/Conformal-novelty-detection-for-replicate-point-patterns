@@ -1,0 +1,6 @@
+Null hypothesis: LGCP
+Alternative: LGCP
+number_test_points (m): 10
+number_true_nulls (m0): 5
+number_calibration_points (n): 2500
+GET_type: erl

@@ -1,0 +1,6 @@
+Null hypothesis: Strauss_Mrkvicka
+Alternative: Strauss_Mrkvicka
+number_test_points (m): 10
+number_true_nulls (m0): 5
+number_calibration_points (n): 250
+GET_type: erl

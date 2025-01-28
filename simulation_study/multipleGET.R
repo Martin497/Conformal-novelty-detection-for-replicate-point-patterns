@@ -20,7 +20,7 @@ test_function <- "L" # Options: L, J
 GET_sims <- 250
 n_list <- c(GET_sims)
 GET_type <- "erl"
-folder <- "GET_05"
+folder <- "multipleGET_01"
 
 data_sims <- 2000
 
