@@ -34,6 +34,7 @@ Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
 - Figure 5: simulation_study/power_across_lambda.py
 - Figures 6 and 7: simulation_study/test_statistic_alpha.py
 - Figures 14 and 15: simulation_study/global_test_across_alpha.py
+- Figure 8: simulation_study/power_across_alphanm.py
 
 ## Software Setup
 
