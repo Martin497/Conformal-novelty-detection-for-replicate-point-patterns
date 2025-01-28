@@ -25,7 +25,7 @@ Co-authors: Christophe A. N. Biscio and Adrien Mazoyer
 ### Sweat gland data
 - MMCTest_sweat_gland.R `Implementation of the naïve MMCTest procedure on the sweat gland data in which independent p-values are computed and saved.`
 
-## From https://github.com/mikkoku/SweatPaper
+#### From https://github.com/mikkoku/SweatPaper
 - abc_mcmc_sampler.jl `Implementation of the ABC-MCMC sampler for the generative model.`
 
 ### Recreating figures
