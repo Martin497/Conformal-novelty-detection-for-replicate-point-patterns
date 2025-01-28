@@ -3,7 +3,16 @@
 """
 Created on Mon Nov 25 09:12:21 2024
 
-@author: martin
+@author: Martin Voigt Vejling
+Emails: mvv@math.aau.dk
+        mvv@es.aau.dk
+        martin.vejling@gmail.com
+
+Script to import p-values, run a multiple testing procedure, and plot the
+resulting empirical metrics (FDR, FWER, TDR, etc...),
+for varying conformal scores.
+
+Reproduces Figure 6.
 """
 
 import pandas as pd
@@ -12,29 +21,22 @@ import matplotlib.pyplot as plt
 from rds2py import read_rds
 
 import multiple_testing_module as mtm
-from MC_CP_comparison import testing_wrapper
 
 
 if __name__ == "__main__":
     plt.style.use("seaborn-v0_8-whitegrid")
-    # alpha_arr = np.logspace(-3, -0.3010299956639812, 100)
-    alpha_arr = np.linspace(1e-03, 0.5, 100)
-    # alpha = 0.05
+    alpha_arr = np.linspace(1e-03, 0.5, 25)
     m = 10
     m0 = 5
     lambda_ = 0.5
     use_m0_est = True
+    save_res = False
 
+    folder_append = ["_01", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10", "_11", "_12", "_13"]
+    method_list = ["CMMCTest"]*len(folder_append)
 
-    folder_append = ["_03big", "_06", "_09", "_12", "_13", "_14", "_15", "_16", "_17", "_19", "_20", "_21"]
-    method_list = ["Proposed"]*len(folder_append)
-
-    null_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP"]
-    test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP"]
-    # null_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka"]
-    # test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka"]
-    # null_model_list = ["Strauss_Mrkvicka"]
-    # test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "MatClust_Mrkvicka", "LGCP"]
+    null_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP"]
+    test_model_list = ["Strauss_Mrkvicka", "Poisson_Mrkvicka", "LGCP"]
     null_number_models = len(null_model_list)
     number_models = len(test_model_list)
 
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     FDR_tot = np.zeros((len(alpha_arr), len(method_list), null_number_models, number_models), dtype=np.float64)
     for alpha_idx, alpha in enumerate(alpha_arr):
         for method_idx, (method, fapp) in enumerate(zip(method_list, folder_append)):
-            folder = f"{method}{fapp}"
+            folder = f"p_values/{method}{fapp}"
             for idx1 in range(null_number_models):
                 for idx2 in range(number_models):
                     name = f"{null_model_list[idx1]}_{test_model_list[idx2]}"
@@ -60,20 +62,19 @@ if __name__ == "__main__":
                     data_sims = u_marg.shape[0]
                     assert m == u_marg.shape[1], "The number of test points, m, is mis-specified."
 
-                    rejectBool = testing_wrapper(u_marg, alpha, m0, m, data_sims,
-                                                 "BH", null_model_list[idx1], test_model_list[idx2],
-                                                 lambda_, use_m0_est)
+                    rejectBool = mtm.testing_wrapper(u_marg, alpha, m0, m, data_sims,
+                                                     "BH", null_model_list[idx1], test_model_list[idx2],
+                                                     lambda_, use_m0_est)
 
                     TDR, TDP = mtm.compute_TDR(rejectBool, null_model_list[idx1], test_model_list[idx2], m0, m, data_sims)
                     TDR_tot[alpha_idx, method_idx, idx1, idx2] = TDR
 
                     FDR, FDP = mtm.compute_FDR(rejectBool, null_model_list[idx1], test_model_list[idx2], m0, data_sims)
-                    # FDR = mtm.compute_FWER(rejectBool, null_model_list[idx1], test_model_list[idx2], m0, data_sims)
                     FDR_tot[alpha_idx, method_idx, idx1, idx2] = FDR
 
     FDR_tot_mean = np.mean(FDR_tot, axis=-1)
     savename = "m05"
-    idx_list = [0, 3, 4, 2, 6, 5, 1, 7, 8, 9, 10, 11]
+    # idx_list = [0, 3, 4, 2, 6, 5, 1, 7, 8, 9, 10, 11]
 
     for null_idx in range(null_number_models):
         for alt_idx in range(number_models):
@@ -94,41 +95,10 @@ if __name__ == "__main__":
                 plt.xlabel("$\\alpha$")
                 plt.ylabel("TDR")
                 plt.legend()
-                # plt.xscale("log")
                 plt.title(f"{null_model_list[null_idx]} vs {test_model_list[alt_idx]}")
-                # plt.savefig(f"test_stat_plots/TDR_{null_idx}_{alt_idx}_{savename}.png", dpi=500, bbox_inches="tight")
+                if save_res is True:
+                    plt.savefig(f"p_values/test_stat_plots/TDR_{null_idx}_{alt_idx}_{savename}.png", dpi=500, bbox_inches="tight")
                 plt.show()
-
-                # with open(f"test_stat_plots/TDR_{null_idx}_{alt_idx}_{savename}.txt", "w") as file:
-                #     for idx in idx_list:
-                #         if idx == 0:
-                #             file.write("\\addplot[semithick, mark=square, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 3:
-                #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 4:
-                #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 2:
-                #             file.write("\\addplot[semithick, mark=square, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 6:
-                #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 5:
-                #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 1:
-                #             file.write("\\addplot[semithick, mark=square, color8, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 7:
-                #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color8, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 8:
-                #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color8, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 9:
-                #             file.write("\\addplot[semithick, mark=square, color7, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 10:
-                #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color7, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         elif idx == 11:
-                #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color7, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-                #         # file.write(f"\\addplot[{idx}]"+"\ntable{%\n")
-                #         for x, y in zip(alpha_arr, TDR_tot[:, idx, null_idx, alt_idx]):
-                #             file.write(f"{x} {y}\n")
-                #         file.write("};\n")
 
         plt.figure(figsize=(6.4*1.5, 4.8*1.2))
         plt.plot(alpha_arr, alpha_arr, color="k")
@@ -147,39 +117,7 @@ if __name__ == "__main__":
         plt.xlabel("$\\alpha$")
         plt.ylabel("FDR")
         plt.legend()
-        # plt.xscale("log")
         plt.title(f"{null_model_list[null_idx]}")
-        # plt.savefig(f"test_stat_plots/FDR_{null_idx}_{savename}.png", dpi=500, bbox_inches="tight")
+        if save_res is True:
+            plt.savefig(f"p_values/test_stat_plots/FDR_{null_idx}_{savename}.png", dpi=500, bbox_inches="tight")
         plt.show()
-
-        # with open(f"test_stat_plots/FDR_{null_idx}_{savename}.txt", "w") as file:
-        #     for idx in idx_list:
-        #         if idx == 0:
-        #             file.write("\\addplot[semithick, mark=square, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 3:
-        #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 4:
-        #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color10, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 2:
-        #             file.write("\\addplot[semithick, mark=square, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 6:
-        #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 5:
-        #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color9, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 1:
-        #             file.write("\\addplot[semithick, mark=square, color8, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 7:
-        #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color8, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 8:
-        #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color8, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 9:
-        #             file.write("\\addplot[semithick, mark=square, color7, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 10:
-        #             file.write("\\addplot[semithick, mark=triangle, dashed, mark options=solid, color7, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         elif idx == 11:
-        #             file.write("\\addplot[semithick, mark=diamond, dotted, mark options=solid, color7, mark repeat=\\markrep, mark phase=\\markphase, line width=1pt]\ntable{%\n")
-        #         # file.write(f"\\addplot[{idx}]"+"\ntable{%\n")
-        #         for x, y in zip(alpha_arr, FDR_tot_mean[:, idx, null_idx]):
-        #             file.write(f"{x} {y}\n")
-        #         file.write("};\n")
-

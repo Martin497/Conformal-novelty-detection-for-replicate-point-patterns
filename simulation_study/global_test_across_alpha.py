@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from rds2py import read_rds
 from scipy.stats import chi2
 
-from MC_CP_comparison import testing_wrapper
+import multiple_testing_module as mtm
 
 def Corrected_Fisher_combination(p_values, gamma):
     """
@@ -97,9 +97,9 @@ if __name__ == "__main__":
                             else:
                                 false_rejection_counter += np.sum(rejectBool)
                         elif technique == "Hochberg":
-                            rejectBool = testing_wrapper(u_marg, alpha, m0, m, data_sims,
-                                                         technique, null_model_list[idx1], test_model_list[idx2],
-                                                         None, use_m0_est)
+                            rejectBool = mtm.testing_wrapper(u_marg, alpha, m0, m, data_sims,
+                                                             technique, null_model_list[idx1], test_model_list[idx2],
+                                                             None, use_m0_est)
                             if null_model_list[idx1] != test_model_list[idx2]:
                                 true_rejection_counter += np.sum(np.any(rejectBool, axis=1))
                             else:
