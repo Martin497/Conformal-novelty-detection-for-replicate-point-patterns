@@ -1,5 +1,5 @@
 # Conformal novelty detection for replicate point patterns
-This GitHub repository contains the code library used to create the results of the paper `Conformal novelty detection for replicate point patterns with FDR or FWER control` submitted to the Journal of the American Statistical Association, January 2024.
+This GitHub repository contains the code library used to create the results of the paper `Conformal novelty detection for replicate point patterns with FDR or FWER control` submitted.
 
 Author: Martin Voigt Vejling
 
